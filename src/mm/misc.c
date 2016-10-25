@@ -123,3 +123,12 @@ PUBLIC int do_svrctl()
 	return(EINVAL);
   }
 }
+
+PUBLIC int do_getprocnr() {
+	int i;
+	for(i = 0; i < NR_PROCS; i++) {
+		if(mproc[i].mp_pid == pid)
+			return i;
+	}
+	return(ENOENT);
+}
