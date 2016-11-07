@@ -44,6 +44,10 @@ _PROTOTYPE( int do_svrctl, (void)					);
 /* GETPROCNUM procedure */
 _PROTOTYPE( int do_getprocnr, (void)				);
 
+_PROTOTYPE( int do_assign_to_group, (void)				);
+_PROTOTYPE( int do_set_group_time, (void)				);
+
+
 #if (MACHINE == MACINTOSH)
 _PROTOTYPE( phys_clicks start_click, (void)				);
 #endif

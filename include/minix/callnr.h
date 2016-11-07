@@ -1,4 +1,4 @@
-#define NCALLS		  79	/* number of system calls allowed */
+#define NCALLS		  81	/* number of system calls allowed */
 
 #define EXIT		   1 
 #define FORK		   2 
@@ -68,3 +68,9 @@
 
 /* Custom system call */
 #define GETPROCNR     78
+
+#define ASSIGN_TO_GROUP     79
+#define SET_GROUP_TIME     80
+
+
+

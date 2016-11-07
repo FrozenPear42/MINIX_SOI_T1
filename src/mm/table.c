@@ -94,6 +94,8 @@ _PROTOTYPE (int (*call_vec[NCALLS]), (void) ) = {
 	do_reboot,	/* 76 = reboot	*/
 	do_svrctl,	/* 77 = svrctl	*/
 	do_getprocnr, /* 78 = getprocnr */
+	do_assign_to_group, /* 79 = assign_to_group */
+	do_set_group_time, /* 80 = set_group_time */
 };
 /* This should not fail with "array size is negative": */
 extern int dummy[sizeof(call_vec) == NCALLS * sizeof(call_vec[0]) ? 1 : -1];

@@ -132,3 +132,10 @@ PUBLIC int do_getprocnr() {
 	}
 	return ENOENT;
 }
+
+PUBLIC int do_assign_to_group() {
+}
+
+PUBLIC int do_set_group_time() {
+}
+
