@@ -147,6 +147,10 @@ FORWARD _PROTOTYPE( int do_sysctl, (message *m_ptr) );
 FORWARD _PROTOTYPE( int do_puts, (message *m_ptr) );
 FORWARD _PROTOTYPE( int do_findproc, (message *m_ptr) );
 
+FORWARD _PROTOTYPE( int do_assign_to_group, (message *m_ptr) );
+FORWARD _PROTOTYPE( int do_set_group_time, (message *m_ptr) );
+
+
 
 /*===========================================================================*
  *				sys_task				     *
@@ -181,6 +185,8 @@ PUBLIC void sys_task()
 	    case SYS_SYSCTL:	r = do_sysctl(&m);	break;
 	    case SYS_PUTS:	r = do_puts(&m);	break;
 	    case SYS_FINDPROC:	r = do_findproc(&m);	break;
+	    case SYS_ASSIGN_TO_GROUP:	r = do_assign_to_group(&m);	break;
+	    case SYS_SET_GROUP_TIME:	r = do_set_group_time(&m);	break;
 	    default:		r = E_BAD_FCN;
 	}
 
@@ -1011,6 +1017,14 @@ message *m_ptr;			/* pointer to request message */
 	}
   }
   return(ESRCH);
+}
+
+PRIVATE int do_assign_to_group(message* m_ptr) {
+
+}
+
+PRIVATE int do_set_group_time(message* m_ptr) {
+  
 }
 
 /*===========================================================================*
