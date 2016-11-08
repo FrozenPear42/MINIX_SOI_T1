@@ -241,7 +241,7 @@ register message *m_ptr;	/* pointer to request message */
   rpc->sys_time = 0;
   rpc->child_utime = 0;
   rpc->child_stime = 0;
-
+  RPC->p_group = M_GROUP_DEFAULT;
   return(OK);
 }
 
@@ -1020,11 +1020,28 @@ message *m_ptr;			/* pointer to request message */
 }
 
 PRIVATE int do_assign_to_group(message* m_ptr) {
-
+  proc_addr((*m_ptr).m1_i1)->p_group = (*m_ptr).m1_i2;
+  return 0;
 }
 
 PRIVATE int do_set_group_time(message* m_ptr) {
-  
+  int time;
+  time = (*m_ptr).m1_i2;
+  switch ((*m_ptr).m1_i1)
+  {
+  case M_GROUP_A:
+    group_time_a = time;
+    break;  
+  case M_GROUP_B:
+    group_time_b = time;
+    break;
+  case M_GROUP_C:
+    group_time_c = time;
+    break;
+  default:
+    break;
+  }  
+  return 0;
 }
 
 /*===========================================================================*

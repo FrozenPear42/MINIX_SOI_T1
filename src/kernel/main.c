@@ -36,6 +36,10 @@ PUBLIC void main()
   struct tasktab *ttp;
   struct exec e_hdr;
 
+  group_time_a = 20;
+  group_time_b = 40;
+  group_time_c = 60;
+
   /* Initialize the interrupt controller. */
   intr_init(1);
 

@@ -58,7 +58,13 @@ struct proc {
   unsigned p_pendcount;		/* count of pending and unfinished signals */
 
   char p_name[16];		/* name of the process */
+  unsigned p_group;
 };
+
+#define M_GROUP_A 0
+#define M_GROUP_B 1
+#define M_GROUP_C 2
+#define M_GROUP_DEFAULT M_GROUP_A
 
 /* Guard word for task stacks. */
 #define STACK_GUARD	((reg_t) (sizeof(reg_t) == 2 ? 0xBEEF : 0xDEADBEEF))
@@ -110,5 +116,9 @@ EXTERN struct proc *pproc_addr[NR_TASKS + NR_PROCS];
 EXTERN struct proc *bill_ptr;	/* ptr to process to bill for clock ticks */
 EXTERN struct proc *rdy_head[NQ];	/* pointers to ready list headers */
 EXTERN struct proc *rdy_tail[NQ];	/* pointers to ready list tails */
+
+EXTERN int group_time_a;
+EXTERN int group_time_b;
+EXTERN int group_time_c;
 
 #endif /* PROC_H */
