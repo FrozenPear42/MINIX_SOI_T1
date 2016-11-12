@@ -35,10 +35,12 @@ PUBLIC void main()
   struct memory *memp;
   struct tasktab *ttp;
   struct exec e_hdr;
-
-  group_time_a = 20;
-  group_time_b = 40;
-  group_time_c = 60;
+  int i;
+  
+  /* Default group times 20, 40, 60, ... */
+  for(i = 0; i < M_GROUP_NUM; ++i) {
+	  group_time[i] = 20*(i+1);
+  }
 
   /* Initialize the interrupt controller. */
   intr_init(1);
@@ -50,6 +52,8 @@ PUBLIC void main()
    * Set up mappings for proc_addr() and proc_number() macros.
    */
   for (rp = BEG_PROC_ADDR, t = -NR_TASKS; rp < END_PROC_ADDR; ++rp, ++t) {
+	rp->p_group = M_GROUP_DEFAULT;
+	rp->p_remaining_time = 0;
 	rp->p_nr = t;		/* proc number from ptr */
         (pproc_addr + NR_TASKS)[t] = rp;        /* proc ptr from number */
   }

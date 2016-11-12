@@ -59,8 +59,10 @@ struct proc {
 
   char p_name[16];		/* name of the process */
   unsigned p_group;
+  unsigned p_remaining_time;
 };
 
+#define M_GROUP_NUM 3
 #define M_GROUP_A 0
 #define M_GROUP_B 1
 #define M_GROUP_C 2
@@ -117,8 +119,5 @@ EXTERN struct proc *bill_ptr;	/* ptr to process to bill for clock ticks */
 EXTERN struct proc *rdy_head[NQ];	/* pointers to ready list headers */
 EXTERN struct proc *rdy_tail[NQ];	/* pointers to ready list tails */
 
-EXTERN int group_time_a;
-EXTERN int group_time_b;
-EXTERN int group_time_c;
-
+EXTERN int group_time[M_GROUP_NUM];
 #endif /* PROC_H */

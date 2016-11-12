@@ -241,7 +241,9 @@ register message *m_ptr;	/* pointer to request message */
   rpc->sys_time = 0;
   rpc->child_utime = 0;
   rpc->child_stime = 0;
+  
   rpc->p_group = M_GROUP_DEFAULT;
+  rpc->p_remaining_time  = group_time[M_GROUP_DEFAULT];
   return(OK);
 }
 
@@ -1020,28 +1022,41 @@ message *m_ptr;			/* pointer to request message */
 }
 
 PRIVATE int do_assign_to_group(message* m_ptr) {
-  proc_addr((*m_ptr).m1_i1)->p_group = (*m_ptr).m1_i2;
-  return 0;
+  int i;
+  int id;
+  int pid;
+  int group;
+  
+  pid = (*m_ptr).m1_i1;
+  group = (*m_ptr).m1_i2;
+  id = -1;
+  
+  for(i = 0; i < NR_PROCS; ++i)
+    if(proc_addr(i)->p_pid == pid) {
+      id = i;
+      break;
+    }
+  
+  if(id == -1) return -1;
+  if(group >= M_GROUP_NUM) return -2;
+  else
+    proc_addr(id)->p_group = group;
+  return group;
 }
 
 PRIVATE int do_set_group_time(message* m_ptr) {
+  int group;
   int time;
+  group = (*m_ptr).m1_i1;
   time = (*m_ptr).m1_i2;
-  switch ((*m_ptr).m1_i1)
-  {
-  case M_GROUP_A:
-    group_time_a = time;
-    break;  
-  case M_GROUP_B:
-    group_time_b = time;
-    break;
-  case M_GROUP_C:
-    group_time_c = time;
-    break;
-  default:
-    break;
-  }  
-  return 0;
+  
+
+  if(group > M_GROUP_NUM || time < 1)
+    return -1;
+  else  
+    group_time[group] = time;
+
+  return group;
 }
 
 /*===========================================================================*

@@ -126,10 +126,10 @@ int kmemfd, memfd;		/* file descriptors of [k]mem */
  *   F S UID   PID  PPID  PGRP   SZ       RECV TTY  TIME CMD
  * fff s uuu ppppp ppppp ppppp ssss rrrrrrrrrr tttmmm:ss cccccccc...
  */
-#define S_HEADER "  PID TTY  TIME CMD\n"
-#define S_FORMAT "%5s %3s %s %s\n"
-#define L_HEADER "  F S UID   PID  PPID  PGRP   SZ       RECV TTY  TIME CMD\n"
-#define L_FORMAT "%3o %c %3d %5s %5d %5d %4d %10s %3s %s %s\n"
+#define S_HEADER "  PID GRP TTY  TIME CMD\n"
+#define S_FORMAT "%5s %3d %3s %s %s\n"
+#define L_HEADER "  F S UID   PID GRP  PPID  PGRP   SZ       RECV TTY  TIME CMD\n"
+#define L_FORMAT "%3o %c %3d %5s %3d %5d %5d %4d %10s %3s %s %s\n"
 
 struct pstat {			/* structure filled by pstat() */
   dev_t ps_dev;			/* major/minor of controlling tty */
@@ -156,6 +156,7 @@ struct pstat {			/* structure filled by pstat() */
   time_t ps_stime;		/* accumulated system time */
   char *ps_args;		/* concatenated argument string */
   vir_bytes ps_procargs;	/* initial stack frame from MM */
+  int ps_group;
 };
 
 /* Ps_state field values in pstat struct above */
@@ -360,7 +361,7 @@ char *argv[];
 
 		if (opt_long) printf(L_FORMAT,
 			       buf.ps_flags, buf.ps_state,
-			       buf.ps_euid, pid, buf.ps_ppid,
+			       buf.ps_euid, pid, buf.ps_group, buf.ps_ppid,
 			       buf.ps_pgrp,
 			       off_to_k((buf.ps_tsize
 					 + buf.ps_stack - buf.ps_data
@@ -374,7 +375,7 @@ char *argv[];
 				       ? taskname(i) : buf.ps_args);
 		else
 			printf(S_FORMAT,
-			       pid, tname((Dev_t) buf.ps_dev),
+			       pid, buf.ps_group, tname((Dev_t) buf.ps_dev),
 			       cpu,
 			       i <= init_proc_nr || buf.ps_args == NULL
 				       ? taskname(i) : buf.ps_args);
@@ -515,6 +516,8 @@ struct pstat *bufp;
 
   bufp->ps_utime = ps_proc[p_ki].user_time;
   bufp->ps_stime = ps_proc[p_ki].sys_time;
+
+  bufp->ps_group = ps_proc[p_ki].p_group;
 
   bufp->ps_procargs = ps_mproc[p_nr].mp_procargs;
 

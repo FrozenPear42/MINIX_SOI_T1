@@ -182,11 +182,11 @@ PRIVATE void mm_init()
 PUBLIC int do_assign_to_group() {
 	message m; 
 	m = mm_in; 
-	_taskcall(SYSTASK, SYS_ASSIGN_TO_GROUP, &m); 
+	return _taskcall(SYSTASK, SYS_ASSIGN_TO_GROUP, &m); 
 }
 
 PUBLIC int do_set_group_time() {
 	message m; 
 	m = mm_in; 
-	_taskcall(SYSTASK, SYS_SET_GROUP_TIME, &m); 
+	return _taskcall(SYSTASK, SYS_SET_GROUP_TIME, &m); 
 }
