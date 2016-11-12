@@ -440,6 +440,12 @@ PRIVATE void sched()
 
   if (rdy_head[USER_Q] == NIL_PROC) return;
 
+  if(rdy_head[USER_Q]->p_remaining_time > 0) {
+    rdy_head[USER_Q]->p_remaining_time--;
+    return;
+  }
+  /* Restart remaining time to default */
+  rdy_head[USER_Q]->p_remaining_time = group_time[rdy_head[USER_Q]->p_group];
   /* One or more user processes queued. */
   rdy_tail[USER_Q]->p_nextready = rdy_head[USER_Q];
   rdy_tail[USER_Q] = rdy_head[USER_Q];
