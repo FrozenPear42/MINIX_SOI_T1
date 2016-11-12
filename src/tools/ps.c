@@ -333,6 +333,8 @@ char *argv[];
   }
   init_proc_nr = i;
 
+  printf("PS for custom queueing\n");
+
   /* Now loop through process table and handle each entry */
   printf("%s", opt_long ? L_HEADER : S_HEADER);
   for (i = -nr_tasks; i < nr_procs; i++) {

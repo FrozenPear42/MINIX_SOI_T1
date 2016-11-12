@@ -241,7 +241,7 @@ register message *m_ptr;	/* pointer to request message */
   rpc->sys_time = 0;
   rpc->child_utime = 0;
   rpc->child_stime = 0;
-  RPC->p_group = M_GROUP_DEFAULT;
+  rpc->p_group = M_GROUP_DEFAULT;
   return(OK);
 }
 
