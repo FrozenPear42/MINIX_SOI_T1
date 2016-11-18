@@ -402,11 +402,6 @@ int irq;
  *		is changing them, provided they are always valid pointers,
  *		since at worst the previous process would be billed.
  *	next_alarm, realtime, sched_ticks, bill_ptr, prev_ptr,
- *	rdy_head[USER_Q]:
- *		These are tested to decide whether to call interrupt().  It
- *		does not matter if the test is sometimes (rarely) backwards
- *		due to a race, since this will only delay the high-level
- *		processing by one tick, or call the high level unnecessarily.
  * The variables which are changed require more care:
  *	rp->user_time, rp->sys_time:
  *		These are protected by explicit locks in system.c.  They are
@@ -467,8 +462,7 @@ int irq;
 
   if (next_alarm <= now ||
       sched_ticks == 1 &&
-      bill_ptr == prev_ptr &&
-      rdy_head[USER_Q] != NIL_PROC) {
+      bill_ptr == prev_ptr) {
 	interrupt(CLOCK);
 	return 1;	/* Reenable interrupts */
   }

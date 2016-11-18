@@ -120,4 +120,8 @@ EXTERN struct proc *rdy_head[NQ];	/* pointers to ready list headers */
 EXTERN struct proc *rdy_tail[NQ];	/* pointers to ready list tails */
 
 EXTERN int group_time[M_GROUP_NUM];
+EXTERN struct proc *group_head[M_GROUP_NUM];
+EXTERN struct proc *group_tail[M_GROUP_NUM];
+EXTERN int current_group;
+EXTERN int remaining_group_time;
 #endif /* PROC_H */

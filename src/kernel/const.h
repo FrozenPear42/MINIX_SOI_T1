@@ -121,8 +121,7 @@
 /* The following items pertain to the scheduling queues. */
 #define TASK_Q             0	/* ready tasks are scheduled via queue 0 */
 #define SERVER_Q           1	/* ready servers are scheduled via queue 1 */
-#define USER_Q             2	/* ready users are scheduled via queue 2 */
-#define NQ                 3	/* # of scheduling queues */
+#define NQ                 2	/* # of scheduling queues */
 
 /* Env_parse() return values. */
 #define EP_UNSET	0	/* variable not set */

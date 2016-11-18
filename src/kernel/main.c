@@ -42,6 +42,8 @@ PUBLIC void main()
 	  group_time[i] = 20*(i+1);
   }
 
+  current_group = M_GROUP_DEFAULT;
+  remaining_group_time = group_time[M_GROUP_DEFAULT];
   /* Initialize the interrupt controller. */
   intr_init(1);
 

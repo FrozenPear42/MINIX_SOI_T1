@@ -66,11 +66,11 @@ PUBLIC void queue_dmp()
 {
   register struct proc *rp;
   int n = 0;
-	printf("\n=== Current group: %d Remaininig time: %d ===", current_group, remaining_group_time);
+	printf("\n=== Current group: %d === Remaininig time: %d ===", current_group, remaining_group_time);
 
 	for(n = 0; n < M_GROUP_NUM; n++) {
-		printf("\nQUEUE GROUP: %d", n);
-  	printf("\n  pid grp     user      sys     command\n");
+		printf("\nQUEUE GROUP: %d @ %d", n, group_time[n]);
+  	printf("\n  pid grp    user     sys command\n");
 		rp = group_head[n];
 		while(rp != NIL_PROC) {
 			

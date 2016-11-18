@@ -308,6 +308,9 @@ PRIVATE void pick_proc()
 
   register struct proc *rp;	/* process to run */
 
+  int i;
+  int group;
+
   if ( (rp = rdy_head[TASK_Q]) != NIL_PROC) {
 	proc_ptr = rp;
 	return;
@@ -316,10 +319,18 @@ PRIVATE void pick_proc()
 	proc_ptr = rp;
 	return;
   }
-  if ( (rp = rdy_head[USER_Q]) != NIL_PROC) {
-	proc_ptr = rp;
-	bill_ptr = rp;
-	return;
+  
+for(i = 1; i <= M_GROUP_NUM; ++i)
+  {
+    group = (current_group + i) % M_GROUP_NUM;
+    rp = group_head[group];
+    if(rp != NIL_PROC) {
+      current_group = group;
+      remaining_group_time = group_time[current_group];
+      proc_ptr = rp;
+	    bill_ptr = rp;
+      return;
+    }  
   }
   /* No one is ready.  Run the idle task.  The idle task might be made an
    * always-ready user task to avoid this special case.
@@ -337,7 +348,6 @@ register struct proc *rp;	/* this process is now runnable */
  * queues are maintained:
  *   TASK_Q   - (highest priority) for runnable tasks
  *   SERVER_Q - (middle priority) for MM and FS only
- *   USER_Q   - (lowest priority) for user processes
  */
 
   if (istaskp(rp)) {
@@ -361,13 +371,12 @@ register struct proc *rp;	/* this process is now runnable */
 	rp->p_nextready = NIL_PROC;
 	return;
   }
-  /* Add user process to the front of the queue.  (Is a bit fairer to I/O
-   * bound processes.)
-   */
-  if (rdy_head[USER_Q] == NIL_PROC)
-	rdy_tail[USER_Q] = rp;
-  rp->p_nextready = rdy_head[USER_Q];
-  rdy_head[USER_Q] = rp;
+   
+  if (group_head[rp->p_group] == NIL_PROC)
+	  group_tail[rp->p_group] = rp;
+  
+  rp->p_nextready = group_head[rp->p_group];
+  group_head[rp->p_group] = rp;
 }
 
 /*===========================================================================*
@@ -379,7 +388,8 @@ register struct proc *rp;	/* this process is no longer runnable */
 /* A process has blocked. */
 
   register struct proc *xp;
-  register struct proc **qtail;  /* TASK_Q, SERVER_Q, or USER_Q rdy_tail */
+  register struct proc **qtail;  /* TASK_Q, SERVER_Q, or any other queue rdy_tail */
+  register int group;
 
   if (istaskp(rp)) {
 	/* task stack still ok? */
@@ -407,24 +417,35 @@ register struct proc *rp;	/* this process is no longer runnable */
 	}
 	qtail = &rdy_tail[SERVER_Q];
   } else {
-	if ( (xp = rdy_head[USER_Q]) == NIL_PROC) return;
-	if (xp == rp) {
-		rdy_head[USER_Q] = xp->p_nextready;
+
+    /* remove from user queue */
+    for(group = 0; group < M_GROUP_NUM; ++group) {
+      xp = group_head[group];
+      qtail = &group_tail[group];
+      if ( xp == NIL_PROC) continue;
+      if (xp == rp) {
+        group_head[group] = xp->p_nextready;
+        if(group == current_group)
 #if (CHIP == M68000)
-		if (rp == proc_ptr)
+          if (rp == proc_ptr)
 #endif
-		pick_proc();
-		return;
+          pick_proc();
+        return;
+      }
+    }
+
 	}
-	qtail = &rdy_tail[USER_Q];
-  }
 
   /* Search body of queue.  A process can be made unready even if it is
    * not running by being sent a signal that kills it.
    */
-  while (xp->p_nextready != rp)
-	if ( (xp = xp->p_nextready) == NIL_PROC) return;
-  xp->p_nextready = xp->p_nextready->p_nextready;
+  while (xp->p_nextready != rp){
+	  xp = xp->p_nextready;
+    if ( xp == NIL_PROC)
+      return;
+    }
+
+    xp->p_nextready = xp->p_nextready->p_nextready;
   if (*qtail == rp) *qtail = xp;
 }
 
@@ -438,19 +459,40 @@ PRIVATE void sched()
  * possibly promoting another user to head of the queue.
  */
 
-  if (rdy_head[USER_Q] == NIL_PROC) return;
+ int i;
+ int group;
+ int new_group;
+ struct proc* rp; 
 
-  if(rdy_head[USER_Q]->p_remaining_time > 0) {
-    rdy_head[USER_Q]->p_remaining_time--;
+
+  if (group_head[current_group] == NIL_PROC) return;
+
+  if(remaining_group_time > 0) {
+    remaining_group_time--;
     return;
   }
-  /* Restart remaining time to default */
-  rdy_head[USER_Q]->p_remaining_time = group_time[rdy_head[USER_Q]->p_group];
-  /* One or more user processes queued. */
-  rdy_tail[USER_Q]->p_nextready = rdy_head[USER_Q];
-  rdy_tail[USER_Q] = rdy_head[USER_Q];
-  rdy_head[USER_Q] = rdy_head[USER_Q]->p_nextready;
-  rdy_tail[USER_Q]->p_nextready = NIL_PROC;
+
+  /* make sure every queue starts with its own process */
+
+  for(i = 0; i < M_GROUP_NUM; ++i)
+  {
+    group = (current_group + i) % M_GROUP_NUM;
+    while(group_head[group] != NIL_PROC && group != group_head[group]->p_group) {
+      new_group = group_head[group]->p_group;
+      group_tail[new_group]->p_nextready = group_head[group];
+      group_tail[new_group] = group_head[group];
+      group_head[group] = group_head[group]->p_nextready;
+      group_tail[new_group]->p_nextready = NIL_PROC;  
+    }
+  }
+
+  
+  group_tail[current_group]->p_nextready = group_head[current_group];
+  group_tail[current_group] = group_head[current_group];
+  group_head[current_group] = group_head[current_group]->p_nextready;
+  group_tail[current_group]->p_nextready = NIL_PROC;
+  
+    /* One or more user processes queued. */
   pick_proc();
 }
 
