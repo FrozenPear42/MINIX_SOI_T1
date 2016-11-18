@@ -32,6 +32,7 @@ _PROTOTYPE( void syn_alrm_task, (void)					);
 /* dmp.c */
 _PROTOTYPE( void map_dmp, (void)					);
 _PROTOTYPE( void p_dmp, (void)						);
+_PROTOTYPE( void queue_dmp, (void)						);
 _PROTOTYPE( void reg_dmp, (struct proc *rp)				);
 
 /* dp8390.c */

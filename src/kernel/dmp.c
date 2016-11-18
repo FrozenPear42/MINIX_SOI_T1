@@ -60,6 +60,35 @@ PUBLIC void p_dmp()
 }
 #endif				/* (CHIP == INTEL) */
 
+
+
+PUBLIC void queue_dmp()
+{
+  register struct proc *rp;
+  int n = 0;
+	printf("\n=== Current group: %d Remaininig time: %d ===", current_group, remaining_group_time);
+
+	for(n = 0; n < M_GROUP_NUM; n++) {
+		printf("\nQUEUE GROUP: %d", n);
+  	printf("\n  pid grp     user      sys     command\n");
+		rp = group_head[n];
+		while(rp != NIL_PROC) {
+			
+			if (rp->p_pid == 0) {
+				printf("(%3d)", proc_number(rp));
+			} else {
+				printf("%5d", rp->p_pid);
+			}
+			
+			printf(" %3d %7lu %7lu %s\n",	rp->p_group, rp->user_time, rp->sys_time, rp->p_name);
+			rp = rp->p_nextready;	
+			}
+	}
+  
+}
+/* Podraza: Próżnia w fizyce nie występuje */
+
+
 /*===========================================================================*
  *				map_dmp    				     *
  *===========================================================================*/
