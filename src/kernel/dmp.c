@@ -22,7 +22,7 @@ PUBLIC void p_dmp()
   int n = 0;
   phys_clicks text, data, size;
 
-  printf("\n--pid --pc- ---sp- flag -user --sys-- -text- -data- -size- -recv- command\n");
+  printf("\n--pid --pc- ---sp- flag -user --sys-- grp -text- -data- -size- -recv- command\n");
 
   for (rp = oldrp; rp < END_PROC_ADDR; rp++) {
 	if (isemptyp(rp)) continue;
@@ -36,11 +36,12 @@ PUBLIC void p_dmp()
 	} else {
 		printf("%5d", rp->p_pid);
 	}
-	printf(" %5lx %6lx %2x %7lu %7lu %5uK %5uK %5uK ",
+	printf(" %5lx %6lx %2x %7lu %7lu %3d %5uK %5uK %5uK ",
 	       (unsigned long) rp->p_reg.pc,
 	       (unsigned long) rp->p_reg.sp,
 	       rp->p_flags,
 	       rp->user_time, rp->sys_time,
+				 rp->p_group,
 	       click_to_round_k(text), click_to_round_k(data),
 	       click_to_round_k(size));
 	if (rp->p_flags & RECEIVING) {
