@@ -1,7 +1,5 @@
 /* time_ext - time a command	Authors: Andy Tanenbaum & Michiel Huisjes */
 
-#define NEW	1
-
 #include <sys/types.h>
 #include <sys/times.h>
 #include <limits.h>
@@ -12,11 +10,6 @@
 #include <sys/wait.h>
 #include <minix/minlib.h>
 #include <stdio.h>
-
-/* -DNEW prints time to 0.01 sec. */
-#ifdef NEW		
-#define HUNDREDTHS 1
-#endif
 
 char **args;
 char *name;
@@ -33,14 +26,9 @@ int main(argc, argv)
 int argc;
 char *argv[];
 {
-
   struct tms pre_buf, post_buf;
   int status, pid;
-#if _VMD_EXT
-  struct timeval start_time, end_time;
-#else
   time_t start_time, end_time;
-#endif
   clock_t real_time;
 
   if (argc == 1) exit(0);
@@ -49,12 +37,7 @@ char *argv[];
   name = argv[2];
   time_name = argv[1];
 
-  /* Get real time at start of run. */
-#if _VMD_EXT
-  (void) sysutime(UTIME_TIMEOFDAY, &start_time);
-#else
   (void) time(&start_time);
-#endif
 
   /* Fork off child. */
   if ((pid = fork()) < 0) {
@@ -70,29 +53,12 @@ char *argv[];
   do {
 	times(&pre_buf);
   } while (wait(&status) != pid);
-#if _VMD_EXT
-  (void) sysutime(UTIME_TIMEOFDAY, &end_time);
-  real_time = (end_time.tv_sec - start_time.tv_sec) * CLOCKS_PER_SEC
-	+ (end_time.tv_usec - start_time.tv_usec) * CLOCKS_PER_SEC / 1000000;
-#else
   (void) time(&end_time);
   real_time = (end_time - start_time) * CLOCKS_PER_SEC;
-#endif
 
   if ((status & 0377) != 0) std_err("Command terminated abnormally.\n");
   times(&post_buf);
 
-  /* Print results. -DNEW enables time on one line to 0.01 sec */
-#ifndef NEW
-  std_err(time_name);
-  std_err("real ");
-  print_time(real_time);
-  std_err("\nuser ");
-  print_time(post_buf.tms_cutime - pre_buf.tms_cutime);
-  std_err("\nsys  ");
-  print_time(post_buf.tms_cstime - pre_buf.tms_cstime);
-  std_err("\n");
-#else
   std_err(time_name);
   print_time(real_time);
   std_err(" real");
@@ -100,8 +66,16 @@ char *argv[];
   std_err(" user");
   print_time(post_buf.tms_cstime - pre_buf.tms_cstime);
   std_err(" sys\n");
-#endif
   return((status & 0377) ? -1 : (status >> 8));
+}
+
+void execute()
+{
+  execvp(name, args);
+  std_err("Cannot execute ");
+  std_err(name);
+  std_err("\n");
+  exit(-1);
 }
 
 void print_time(t)
@@ -134,9 +108,7 @@ register clock_t t;
   else
 	a[7] = '0';
   a[9] = hundredths / 10 + '0';
-#ifdef HUNDREDTHS		/* tenths used to be enough */
   a[10] = hundredths % 10 + '0';
-#endif
   std_err(a);
 }
 
@@ -151,13 +123,4 @@ char *p;
   *p++ = c1;
   *p++ = c2;
   if (n > 0) digit_seen = 1;
-}
-
-void execute()
-{
-  execvp(name, args);
-  std_err("Cannot execute ");
-  std_err(name);
-  std_err("\n");
-  exit(-1);
 }

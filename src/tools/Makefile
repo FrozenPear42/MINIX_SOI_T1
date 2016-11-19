@@ -33,7 +33,7 @@ ps:	ps.c /usr/include/minix/config.h /usr/include/minix/const.h \
 bootable:
 	exec su root mkboot bootable
 
-hdboot:	programs
+hdboot:	programs ps install
 	exec sh mkboot $@
 
 fdboot:	programs

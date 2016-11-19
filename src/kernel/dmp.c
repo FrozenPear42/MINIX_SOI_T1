@@ -66,11 +66,11 @@ PUBLIC void queue_dmp()
 {
   register struct proc *rp;
   int n = 0;
-	printf("\n=== Current group: %d === Remaininig time: %d ===", current_group, remaining_group_time);
+	printf("\n=== Current group: %d === Sched: %lu/%lu ===", current_group, sched_count, sched_real_count);
 
 	for(n = 0; n < M_GROUP_NUM; n++) {
 		printf("\nQUEUE GROUP: %d @ %d", n, group_time[n]);
-  	printf("\n  pid grp    user     sys command\n");
+  	printf("\n  pid grp   quan    user     sys command\n");
 		rp = group_head[n];
 		while(rp != NIL_PROC) {
 			
@@ -80,7 +80,7 @@ PUBLIC void queue_dmp()
 				printf("%5d", rp->p_pid);
 			}
 			
-			printf(" %3d %7lu %7lu %s\n",	rp->p_group, rp->user_time, rp->sys_time, rp->p_name);
+			printf(" %3d %6d %7lu %7lu %s\n",	rp->p_group, rp->p_remaining_time, rp->user_time, rp->sys_time, rp->p_name);
 			rp = rp->p_nextready;	
 			}
 	}

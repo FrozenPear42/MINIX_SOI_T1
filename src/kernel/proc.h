@@ -123,5 +123,6 @@ EXTERN int group_time[M_GROUP_NUM];
 EXTERN struct proc *group_head[M_GROUP_NUM];
 EXTERN struct proc *group_tail[M_GROUP_NUM];
 EXTERN int current_group;
-EXTERN int remaining_group_time;
+EXTERN unsigned long sched_count;
+EXTERN unsigned long sched_real_count;
 #endif /* PROC_H */

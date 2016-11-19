@@ -315,18 +315,19 @@ PRIVATE void pick_proc()
 	proc_ptr = rp;
 	return;
   }
+  
   if ( (rp = rdy_head[SERVER_Q]) != NIL_PROC) {
 	proc_ptr = rp;
 	return;
   }
   
-for(i = 1; i <= M_GROUP_NUM; ++i)
+  /* Try  to choose proccess from  nonempty queue */
+  for(i = 0; i < M_GROUP_NUM; ++i)
   {
     group = (current_group + i) % M_GROUP_NUM;
     rp = group_head[group];
     if(rp != NIL_PROC) {
       current_group = group;
-      remaining_group_time = group_time[current_group];
       proc_ptr = rp;
 	    bill_ptr = rp;
       return;
@@ -335,6 +336,7 @@ for(i = 1; i <= M_GROUP_NUM; ++i)
   /* No one is ready.  Run the idle task.  The idle task might be made an
    * always-ready user task to avoid this special case.
    */
+  current_group = M_GROUP_DEFAULT;
   bill_ptr = proc_ptr = proc_addr(IDLE);
 }
 
@@ -371,7 +373,7 @@ register struct proc *rp;	/* this process is now runnable */
 	rp->p_nextready = NIL_PROC;
 	return;
   }
-   
+  
   if (group_head[rp->p_group] == NIL_PROC)
 	  group_tail[rp->p_group] = rp;
   
@@ -400,8 +402,10 @@ register struct proc *rp;	/* this process is no longer runnable */
 	if (xp == rp) {
 		/* Remove head of queue */
 		rdy_head[TASK_Q] = xp->p_nextready;
-		if (rp == proc_ptr) pick_proc();
-		return;
+		if (rp == proc_ptr)
+       pick_proc();
+		
+    return;
 	}
 	qtail = &rdy_tail[TASK_Q];
   }
@@ -425,11 +429,12 @@ register struct proc *rp;	/* this process is no longer runnable */
       if ( xp == NIL_PROC) continue;
       if (xp == rp) {
         group_head[group] = xp->p_nextready;
-        if(group == current_group)
+        if(group == current_group){
 #if (CHIP == M68000)
           if (rp == proc_ptr)
 #endif
           pick_proc();
+        }          
         return;
       }
     }
@@ -441,7 +446,7 @@ register struct proc *rp;	/* this process is no longer runnable */
    */
   while (xp->p_nextready != rp){
 	  xp = xp->p_nextready;
-    if ( xp == NIL_PROC)
+    if (xp == NIL_PROC)
       return;
     }
 
@@ -452,47 +457,54 @@ register struct proc *rp;	/* this process is no longer runnable */
 /*===========================================================================*
  *				sched					     * 
  *===========================================================================*/
-PRIVATE void sched()
-{
-/* The current process has run too long.  If another low priority (user)
- * process is runnable, put the current process on the end of the user queue,
- * possibly promoting another user to head of the queue.
- */
+PRIVATE void sched() {
+  /* The current process has run too long.  If another low priority (user)
+   * process is runnable, put the current process on the end of the user queue,
+   * possibly promoting another user to head of the queue.
+   */
 
- int i;
- int group;
- int new_group;
- struct proc* rp; 
+  int group;
+  int new_group;
+  struct proc *rp;
 
+  sched_real_count++;
 
-  if (group_head[current_group] == NIL_PROC) return;
+  if (group_head[current_group] == NIL_PROC) 
+    return;
 
-  if(remaining_group_time > 0) {
-    remaining_group_time--;
+  /* if remaining time - consume time and continue */
+  if ( group_head[current_group]->p_remaining_time > 0) {
+    group_head[current_group]->p_remaining_time--;
     return;
   }
 
-  /* make sure every queue starts with its own process */
+    sched_count++;
+    
+    /* Move current process to the end of queue */
+    group_head[current_group]->p_remaining_time = group_time[current_group];
+    group_tail[current_group]->p_nextready = group_head[current_group];
+    group_tail[current_group] = group_head[current_group];
+    group_head[current_group] = group_head[current_group]->p_nextready;
+    group_tail[current_group]->p_nextready = NIL_PROC;
+  
+    /* Next group */
+    current_group = (current_group + 1) % M_GROUP_NUM;
 
-  for(i = 0; i < M_GROUP_NUM; ++i)
-  {
-    group = (current_group + i) % M_GROUP_NUM;
-    while(group_head[group] != NIL_PROC && group != group_head[group]->p_group) {
+  /* make sure every queue starts with its own process */
+  for (group = 0; group < M_GROUP_NUM; ++group) {
+    while (!(group_head[group] == NIL_PROC || group == group_head[group]->p_group)) {
       new_group = group_head[group]->p_group;
+      
+      group_head[group]->p_remaining_time = group_time[new_group];
+    
       group_tail[new_group]->p_nextready = group_head[group];
       group_tail[new_group] = group_head[group];
       group_head[group] = group_head[group]->p_nextready;
-      group_tail[new_group]->p_nextready = NIL_PROC;  
+      group_tail[new_group]->p_nextready = NIL_PROC;
     }
   }
 
-  
-  group_tail[current_group]->p_nextready = group_head[current_group];
-  group_tail[current_group] = group_head[current_group];
-  group_head[current_group] = group_head[current_group]->p_nextready;
-  group_tail[current_group]->p_nextready = NIL_PROC;
-  
-    /* One or more user processes queued. */
+  /* One or more user processes queued. */
   pick_proc();
 }
 

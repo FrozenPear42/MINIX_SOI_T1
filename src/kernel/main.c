@@ -43,7 +43,8 @@ PUBLIC void main()
   }
 
   current_group = M_GROUP_DEFAULT;
-  remaining_group_time = group_time[M_GROUP_DEFAULT];
+  sched_count = 0;
+  sched_real_count = 0;
   /* Initialize the interrupt controller. */
   intr_init(1);
 
