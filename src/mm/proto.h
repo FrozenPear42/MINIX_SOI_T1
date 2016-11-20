@@ -37,10 +37,13 @@ _PROTOTYPE( int do_getset, (void)					);
 
 /* main.c */
 _PROTOTYPE( void main, (void)						);
-
+_PROTOTYPE( int do_setpri, (void)					);
+_PROTOTYPE( int do_setgroup, (void)					);
 /* misc.c */
 _PROTOTYPE( int do_reboot, (void)					);
 _PROTOTYPE( int do_svrctl, (void)					);
+/* GETPROCNUM procedure */
+_PROTOTYPE( int do_getprocnr, (void)				);
 
 #if (MACHINE == MACINTOSH)
 _PROTOTYPE( phys_clicks start_click, (void)				);

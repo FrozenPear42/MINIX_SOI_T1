@@ -52,7 +52,9 @@ struct proc {
   message *p_messbuf;		/* pointer to message buffer */
   int p_getfrom;		/* from whom does process want to receive? */
   int p_sendto;
-
+  int base;
+  int current;
+  char group;
   struct proc *p_nextready;	/* pointer to next ready process */
   sigset_t p_pending;		/* bit map for pending signals */
   unsigned p_pendcount;		/* count of pending and unfinished signals */

@@ -146,7 +146,8 @@ FORWARD _PROTOTYPE( int do_getmap, (message *m_ptr) );
 FORWARD _PROTOTYPE( int do_sysctl, (message *m_ptr) );
 FORWARD _PROTOTYPE( int do_puts, (message *m_ptr) );
 FORWARD _PROTOTYPE( int do_findproc, (message *m_ptr) );
-
+FORWARD _PROTOTYPE ( int do_setpri, (message *m_ptr) );
+FORWARD _PROTOTYPE ( int do_setgroup, (message *m_ptr) );
 
 /*===========================================================================*
  *				sys_task				     *
@@ -181,6 +182,8 @@ PUBLIC void sys_task()
 	    case SYS_SYSCTL:	r = do_sysctl(&m);	break;
 	    case SYS_PUTS:	r = do_puts(&m);	break;
 	    case SYS_FINDPROC:	r = do_findproc(&m);	break;
+	    case SYS_SETPRI:     r = do_setpri(&m);      break;
+ 	    case SYS_SETGROUP:   r = do_setgroup(&m);    break;	
 	    default:		r = E_BAD_FCN;
 	}
 
@@ -235,7 +238,9 @@ register message *m_ptr;	/* pointer to request message */
   rpc->sys_time = 0;
   rpc->child_utime = 0;
   rpc->child_stime = 0;
-
+  rpc->group = 'A';
+  rpc->base = 1;
+  rpc->current = 1;
   return(OK);
 }
 
@@ -1225,4 +1230,21 @@ register struct proc *rp;
 	rp->p_reg.ds = click_to_hclick(rp->p_map[D].mem_phys);
   }
 }
+
+
+/* FIXME: proc_addr takes proc index, not pid  */
+
+PRIVATE int do_setpri(message* m_ptr)
+{
+    proc_addr((*m_ptr).m1_i1)->base = (*m_ptr).m1_i2;
+    return 0;
+}
+
+PRIVATE int do_setgroup(message* m_ptr)
+{
+    proc_addr((*m_ptr).m1_i1)->group = (*m_ptr).m1_i2;
+    return 0;
+}
+
+
 #endif /* (CHIP == INTEL) */

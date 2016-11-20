@@ -47,6 +47,10 @@ PUBLIC void main()
    */
   for (rp = BEG_PROC_ADDR, t = -NR_TASKS; rp < END_PROC_ADDR; ++rp, ++t) {
 	rp->p_nr = t;		/* proc number from ptr */
+	rp->base = 1;
+  	rp->current = 1;
+	rp ->group = 'A';     
+
         (pproc_addr + NR_TASKS)[t] = rp;        /* proc ptr from number */
   }
 
@@ -159,3 +163,5 @@ int n;
   }
   wreboot(RBT_PANIC);
 }
+
+

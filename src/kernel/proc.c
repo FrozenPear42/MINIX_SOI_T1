@@ -431,20 +431,60 @@ register struct proc *rp;	/* this process is no longer runnable */
 /*===========================================================================*
  *				sched					     * 
  *===========================================================================*/
-PRIVATE void sched()
-{
-/* The current process has run too long.  If another low priority (user)
- * process is runnable, put the current process on the end of the user queue,
- * possibly promoting another user to head of the queue.
- */
+PRIVATE void sched() {
+  /* The current process has run too long.  If another low priority (user)
+   * process is runnable, put the current process on the end of the user queue,
+   * possibly promoting another user to head of the queue.
+   */
+  struct proc *actual, *max, *max_prev, *first, *newlist;
+  int x = 1;
 
-  if (rdy_head[USER_Q] == NIL_PROC) return;
+  if (rdy_head[USER_Q] == NIL_PROC)
+    return;
+  
+  actual = rdy_head[USER_Q]->p_nextready;
+  while (actual != NIL_PROC) {
+    if (proc->group == 'A')
+      proc->current++;
+    if (proc->group == 'B')
+      proc->current = proc->current + 2;
+    if (proc->group == 'C')
+      proc->current = proc->current + 3;
 
+    actual = actual->p_nextready;
+  }
   /* One or more user processes queued. */
   rdy_tail[USER_Q]->p_nextready = rdy_head[USER_Q];
   rdy_tail[USER_Q] = rdy_head[USER_Q];
+  rdy_tail[USER_Q]->current = rdy_tail[USER_Q]->base;
+
+  newlist = NIL_PROC;
+
+  first = rdy_head[USER_Q];
+  while (first != NIL_PROC) {
+    actual = first;
+    max_prev = NIL_PROC;
+    max = actual;
+    while (actual->p_nextready != NIL_PROC) {
+      if (actual->p_nextready->current > max->current) {
+        max_prev = actual;
+        max = actual->p_nextready;
+      }
+      actual = actual->p_nextready;
+    }
+    if (max_prev != NIL_PROC)
+      max_prev->p_nextready = max->p_nextready;
+    else
+      first = max->p_nextready;
+    max->p_nextready = newlist;
+    newlist = max;
+  }
+  first = newlist;
+  rdy_head[USER_Q] = first;
+
   rdy_head[USER_Q] = rdy_head[USER_Q]->p_nextready;
   rdy_tail[USER_Q]->p_nextready = NIL_PROC;
+
   pick_proc();
 }
 
