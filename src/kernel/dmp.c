@@ -59,34 +59,64 @@ PUBLIC void p_dmp()
 }
 #endif				/* (CHIP == INTEL) */
 
+
+/*===========================================================================*
+ *				queue_dmp    				     *
+ *===========================================================================*/
+
+PUBLIC void queue_dmp() {
+  register struct proc *rp;
+  int n = 0;
+  printf("\n=== === === === ===");
+
+  printf("\n  pid grp base curr    user     sys command\n");
+  rp = rdy_head[USER_Q];
+  while (rp != NIL_PROC) {
+
+    if (rp->p_pid == 0) {
+      printf("(%3d)", proc_number(rp));
+    } else {
+      printf("%5d", rp->p_pid);
+    }
+
+    printf(" %3c %4d %4d %7lu %7lu %s\n", rp->group, rp->base, rp->current,
+           rp->user_time, rp->sys_time, rp->p_name);
+    rp = rp->p_nextready;
+  }
+}
+
 /*===========================================================================*
  *				map_dmp    				     *
  *===========================================================================*/
-PUBLIC void map_dmp()
-{
-  register struct proc *rp;
-  static struct proc *oldrp = cproc_addr(HARDWARE);
-  int n = 0;
-  phys_clicks size;
+  PUBLIC void map_dmp() {
+    register struct proc *rp;
+    static struct proc *oldrp = cproc_addr(HARDWARE);
+    int n = 0;
+    phys_clicks size;
 
-  printf("\nPROC NAME-  -----TEXT-----  -----DATA-----  ----STACK-----  -SIZE-\n");
-  for (rp = oldrp; rp < END_PROC_ADDR; rp++) {
-	if (isemptyp(rp)) continue;
-	if (++n > 20) break;
-	size = rp->p_map[T].mem_len
-		+ ((rp->p_map[S].mem_phys + rp->p_map[S].mem_len)
-						- rp->p_map[D].mem_phys);
-	printf("%3d %-6.6s  %4x %4x %4x  %4x %4x %4x  %4x %4x %4x  %5uK\n",
-	       proc_number(rp),
-	       rp->p_name,
-	       rp->p_map[T].mem_vir, rp->p_map[T].mem_phys, rp->p_map[T].mem_len,
-	       rp->p_map[D].mem_vir, rp->p_map[D].mem_phys, rp->p_map[D].mem_len,
-	       rp->p_map[S].mem_vir, rp->p_map[S].mem_phys, rp->p_map[S].mem_len,
-	       click_to_round_k(size));
+    printf("\nPROC NAME-  -----TEXT-----  -----DATA-----  ----STACK-----  "
+           "-SIZE-\n");
+    for (rp = oldrp; rp < END_PROC_ADDR; rp++) {
+      if (isemptyp(rp))
+        continue;
+      if (++n > 20)
+        break;
+      size = rp->p_map[T].mem_len +
+             ((rp->p_map[S].mem_phys + rp->p_map[S].mem_len) -
+              rp->p_map[D].mem_phys);
+      printf("%3d %-6.6s  %4x %4x %4x  %4x %4x %4x  %4x %4x %4x  %5uK\n",
+             proc_number(rp), rp->p_name, rp->p_map[T].mem_vir,
+             rp->p_map[T].mem_phys, rp->p_map[T].mem_len, rp->p_map[D].mem_vir,
+             rp->p_map[D].mem_phys, rp->p_map[D].mem_len, rp->p_map[S].mem_vir,
+             rp->p_map[S].mem_phys, rp->p_map[S].mem_len,
+             click_to_round_k(size));
+    }
+    if (rp == END_PROC_ADDR)
+      rp = cproc_addr(HARDWARE);
+    else
+      printf("--more--\r");
+    oldrp = rp;
   }
-  if (rp == END_PROC_ADDR) rp = cproc_addr(HARDWARE); else printf("--more--\r");
-  oldrp = rp;
-}
 
 #if (CHIP == M68000)
 FORWARD _PROTOTYPE(void mem_dmp, (char *adr, int len));

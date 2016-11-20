@@ -189,7 +189,7 @@ PUBLIC int do_setpri()
 {
   message m;
   m= mm_in;
-  _taskcall(SYSTASK, SYS_SETPRI, &m);
+  return _taskcall(SYSTASK, SYS_SETPRI, &m);
 }
 /*===========================================================================*
  *                           		setgroup                          *
@@ -199,5 +199,5 @@ PUBLIC int do_setgroup()
 {
   message m;
   m= mm_in;
-  _taskcall(SYSTASK, SYS_SETGROUP, &m);
+  return _taskcall(SYSTASK, SYS_SETGROUP, &m);
 }

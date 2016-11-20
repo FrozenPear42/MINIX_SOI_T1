@@ -441,49 +441,72 @@ PRIVATE void sched() {
 
   if (rdy_head[USER_Q] == NIL_PROC)
     return;
-  
+
   actual = rdy_head[USER_Q]->p_nextready;
   while (actual != NIL_PROC) {
-    if (proc->group == 'A')
-      proc->current++;
-    if (proc->group == 'B')
-      proc->current = proc->current + 2;
-    if (proc->group == 'C')
-      proc->current = proc->current + 3;
-
+    if (actual->group == 'A')
+      actual->current += 1;
+    else if (actual->group == 'B')
+      actual->current += 2;
+    else if (actual->group == 'C')
+      actual->current += 4;
     actual = actual->p_nextready;
   }
-  /* One or more user processes queued. */
-  rdy_tail[USER_Q]->p_nextready = rdy_head[USER_Q];
-  rdy_tail[USER_Q] = rdy_head[USER_Q];
-  rdy_tail[USER_Q]->current = rdy_tail[USER_Q]->base;
 
-  newlist = NIL_PROC;
+  /* Back to base priority */
+  rdy_head[USER_Q]->current = rdy_head[USER_Q]->base;
 
-  first = rdy_head[USER_Q];
-  while (first != NIL_PROC) {
-    actual = first;
-    max_prev = NIL_PROC;
-    max = actual;
-    while (actual->p_nextready != NIL_PROC) {
-      if (actual->p_nextready->current > max->current) {
-        max_prev = actual;
-        max = actual->p_nextready;
-      }
-      actual = actual->p_nextready;
-    }
-    if (max_prev != NIL_PROC)
-      max_prev->p_nextready = max->p_nextready;
-    else
-      first = max->p_nextready;
-    max->p_nextready = newlist;
-    newlist = max;
+  actual = rdy_head[USER_Q];
+  max = rdy_head[USER_Q];
+
+  while (actual != NIL_PROC) {
+    if (actual->current > max->current)
+      max = actual;
+    actual = actual->p_nextready;
   }
-  first = newlist;
-  rdy_head[USER_Q] = first;
 
-  rdy_head[USER_Q] = rdy_head[USER_Q]->p_nextready;
-  rdy_tail[USER_Q]->p_nextready = NIL_PROC;
+  if (max != rdy_head[USER_Q]) {
+
+    max_prev = rdy_head[USER_Q];
+    while (max_prev->p_nextready != max)
+      max_prev = max_prev->p_nextready;
+
+    /* move max prpccess to the top of the queue */
+    max_prev->p_nextready = max->p_nextready;
+    max->p_nextready = rdy_head[USER_Q];
+    rdy_head[USER_Q] = max;
+  }
+
+  /*
+    rdy_tail[USER_Q]->p_nextready = rdy_head[USER_Q];
+    rdy_tail[USER_Q] = rdy_head[USER_Q];
+    rdy_head[USER_Q] = rdy_head[USER_Q]->p_nextready;
+    rdy_tail[USER_Q]->p_nextready = NIL_PROC;
+
+    newlist = NIL_PROC;
+
+    first = rdy_head[USER_Q];
+    while (first != NIL_PROC) {
+      actual = first;
+      max_prev = NIL_PROC;
+      max = actual;
+      while (actual->p_nextready != NIL_PROC) {
+        if (actual->p_nextready->current > max->current) {
+          max_prev = actual;
+          max = actual->p_nextready;
+        }
+        actual = actual->p_nextready;
+      }
+      if (max_prev != NIL_PROC)
+        max_prev->p_nextready = max->p_nextready;
+      else
+        first = max->p_nextready;
+      max->p_nextready = newlist;
+      newlist = max;
+    }
+    first = newlist;
+    rdy_head[USER_Q] = first;
+  */
 
   pick_proc();
 }

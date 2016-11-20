@@ -1234,17 +1234,53 @@ register struct proc *rp;
 
 /* FIXME: proc_addr takes proc index, not pid  */
 
-PRIVATE int do_setpri(message* m_ptr)
-{
-    proc_addr((*m_ptr).m1_i1)->base = (*m_ptr).m1_i2;
-    return 0;
+PRIVATE int do_setpri(message *m_ptr) {
+  int i;
+  int id;
+  int pid;
+  int priority;
+
+  pid = (*m_ptr).m1_i1;
+  priority = (*m_ptr).m1_i2;
+  id = -1;
+
+  for (i = 0; i < NR_PROCS; ++i)
+    if (proc_addr(i)->p_pid == pid) {
+      id = i;
+      break;
+    }
+  /* Proccess not found */
+  if (id == -1)
+    return -1;
+
+  proc_addr(id)->base = priority;
+  return priority;
 }
 
-PRIVATE int do_setgroup(message* m_ptr)
-{
-    proc_addr((*m_ptr).m1_i1)->group = (*m_ptr).m1_i2;
-    return 0;
-}
+PRIVATE int do_setgroup(message *m_ptr) {
+  int i;
+  int id;
+  int pid;
+  char group;
 
+  pid = (*m_ptr).m1_i1;
+  group = (char)((*m_ptr).m1_i2);
+  id = -1;
+
+  if(group < 'A' || group > 'C')
+    return -2;
+
+  for (i = 0; i < NR_PROCS; ++i)
+    if (proc_addr(i)->p_pid == pid) {
+      id = i;
+      break;
+    }
+  /* Proccess not found */
+  if (id == -1)
+    return -1;
+
+  proc_addr(id)->group = group;
+  return (int)group;
+}
 
 #endif /* (CHIP == INTEL) */
