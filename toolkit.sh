@@ -131,10 +131,9 @@ do
 				echo 'Press enter to continue...'
 				read
 			fi
-			
 			umount $TMP_DIR
 			rmdir  $TMP_DIR
-			umount $MOUNT_DIR
+			umount ../$MOUNT_DIR
 			;;
 		"q")
 			echo "-> Sleeeeeeeeeep"
