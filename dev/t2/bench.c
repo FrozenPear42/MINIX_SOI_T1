@@ -33,10 +33,12 @@ int main(int argc, char* argv[])
     pid = getpid();
     res = assign_to_group (pid, group);
 
-    printf("PID: %d Group: %d\n", pid, res);
+    printf("[Running  ] PID: %d Group: %d\n", pid, res);
 
     for (a=0; a<2000000000;a++)
          res = res * a;
-	
+
+    printf("[Completed] PID: %d Group: %d\n", pid, group);
+
    return 0;
 }

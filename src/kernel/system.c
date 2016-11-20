@@ -1020,39 +1020,42 @@ message *m_ptr;			/* pointer to request message */
   return(ESRCH);
 }
 
-PRIVATE int do_assign_to_group(message* m_ptr) {
+PRIVATE int do_assign_to_group(message *m_ptr) {
   int i;
   int id;
   int pid;
   int group;
-  
+
   pid = (*m_ptr).m1_i1;
   group = (*m_ptr).m1_i2;
   id = -1;
-  
-  for(i = 0; i < NR_PROCS; ++i)
-    if(proc_addr(i)->p_pid == pid) {
+
+  for (i = 0; i < NR_PROCS; ++i)
+    if (proc_addr(i)->p_pid == pid) {
       id = i;
       break;
     }
+
+  if (id == -1)
+    return -1;
+  if (group >= M_GROUP_NUM)
+    return -2;
   
-  if(id == -1) return -1;
-  if(group >= M_GROUP_NUM) return -2;
-  else
-    proc_addr(id)->p_group = group;
+  proc_addr(id)->p_group = group;
+  proc_addr(id)->p_remaining_time = group_time[group];
+
   return group;
 }
 
-PRIVATE int do_set_group_time(message* m_ptr) {
+PRIVATE int do_set_group_time(message *m_ptr) {
   int group;
   int time;
   group = (*m_ptr).m1_i1;
   time = (*m_ptr).m1_i2;
-  
 
-  if(group > M_GROUP_NUM || time < 1)
+  if (group > M_GROUP_NUM || time < 1)
     return -1;
-  else  
+  else
     group_time[group] = time;
 
   return group;

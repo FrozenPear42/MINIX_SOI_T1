@@ -344,114 +344,131 @@ PRIVATE void pick_proc()
  *				ready					     * 
  *===========================================================================*/
 PRIVATE void ready(rp)
-register struct proc *rp;	/* this process is now runnable */
+register struct proc *rp; /* this process is now runnable */
 {
-/* Add 'rp' to the end of one of the queues of runnable processes. Three
- * queues are maintained:
- *   TASK_Q   - (highest priority) for runnable tasks
- *   SERVER_Q - (middle priority) for MM and FS only
- */
+  /* Add 'rp' to the end of one of the queues of runnable processes. Three
+   * queues are maintained:
+   *   TASK_Q   - (highest priority) for runnable tasks
+   *   SERVER_Q - (middle priority) for MM and FS only
+   */
 
   if (istaskp(rp)) {
-	if (rdy_head[TASK_Q] != NIL_PROC)
-		/* Add to tail of nonempty queue. */
-		rdy_tail[TASK_Q]->p_nextready = rp;
-	else {
-		proc_ptr =		/* run fresh task next */
-		rdy_head[TASK_Q] = rp;	/* add to empty queue */
-	}
-	rdy_tail[TASK_Q] = rp;
-	rp->p_nextready = NIL_PROC;	/* new entry has no successor */
-	return;
+    if (rdy_head[TASK_Q] != NIL_PROC)
+      /* Add to tail of nonempty queue. */
+      rdy_tail[TASK_Q]->p_nextready = rp;
+    else {
+      proc_ptr =                 /* run fresh task next */
+          rdy_head[TASK_Q] = rp; /* add to empty queue */
+    }
+    rdy_tail[TASK_Q] = rp;
+    rp->p_nextready = NIL_PROC; /* new entry has no successor */
+    return;
   }
-  if (isservp(rp)) {		/* others are similar */
-	if (rdy_head[SERVER_Q] != NIL_PROC)
-		rdy_tail[SERVER_Q]->p_nextready = rp;
-	else
-		rdy_head[SERVER_Q] = rp;
-	rdy_tail[SERVER_Q] = rp;
-	rp->p_nextready = NIL_PROC;
-	return;
+  if (isservp(rp)) { /* others are similar */
+    if (rdy_head[SERVER_Q] != NIL_PROC)
+      rdy_tail[SERVER_Q]->p_nextready = rp;
+    else
+      rdy_head[SERVER_Q] = rp;
+    rdy_tail[SERVER_Q] = rp;
+    rp->p_nextready = NIL_PROC;
+    return;
   }
-  
+
   if (group_head[rp->p_group] == NIL_PROC)
-	  group_tail[rp->p_group] = rp;
-  
+    group_tail[rp->p_group] = rp;
+
   rp->p_nextready = group_head[rp->p_group];
   group_head[rp->p_group] = rp;
+
+  rp->p_remaining_time = group_time[rp->p_group];
+  
+  /* If we have just pushed new process on the top of the current queue give
+   * that proccess remaining time and switch to it */
+  if (rp->p_group == current_group) {
+    if (rp->p_nextready != NIL_PROC) {
+      rp->p_remaining_time = rp->p_nextready->p_remaining_time;
+      rp->p_nextready->p_remaining_time = group_time[rp->p_group];
+    }
+    pick_proc();
+  }
 }
 
 /*===========================================================================*
  *				unready					     * 
  *===========================================================================*/
-PRIVATE void unready(rp)
-register struct proc *rp;	/* this process is no longer runnable */
+PRIVATE void unready(rp) 
+register struct proc *rp; /* this process is no longer runnable */
 {
-/* A process has blocked. */
+  /* A process has blocked. */
 
   register struct proc *xp;
-  register struct proc **qtail;  /* TASK_Q, SERVER_Q, or any other queue rdy_tail */
+  register struct proc **qtail; /* TASK_Q, SERVER_Q, or any other queue rdy_tail */
   register int group;
 
   if (istaskp(rp)) {
-	/* task stack still ok? */
-	if (*rp->p_stguard != STACK_GUARD)
-		panic("stack overrun by task", proc_number(rp));
+    /* task stack still ok? */
+    if (*rp->p_stguard != STACK_GUARD)
+      panic("stack overrun by task", proc_number(rp));
 
-	if ( (xp = rdy_head[TASK_Q]) == NIL_PROC) return;
-	if (xp == rp) {
-		/* Remove head of queue */
-		rdy_head[TASK_Q] = xp->p_nextready;
-		if (rp == proc_ptr)
-       pick_proc();
-		
-    return;
-	}
-	qtail = &rdy_tail[TASK_Q];
-  }
-  else if (isservp(rp)) {
-	if ( (xp = rdy_head[SERVER_Q]) == NIL_PROC) return;
-	if (xp == rp) {
-		rdy_head[SERVER_Q] = xp->p_nextready;
+    if ((xp = rdy_head[TASK_Q]) == NIL_PROC)
+      return;
+    if (xp == rp) {
+      /* Remove head of queue */
+      rdy_head[TASK_Q] = xp->p_nextready;
+      if (rp == proc_ptr)
+        pick_proc();
+
+      return;
+    }
+    qtail = &rdy_tail[TASK_Q];
+  } else if (isservp(rp)) {
+    if ((xp = rdy_head[SERVER_Q]) == NIL_PROC)
+      return;
+    if (xp == rp) {
+      rdy_head[SERVER_Q] = xp->p_nextready;
 #if (CHIP == M68000)
-		if (rp == proc_ptr)
+      if (rp == proc_ptr)
 #endif
-		pick_proc();
-		return;
-	}
-	qtail = &rdy_tail[SERVER_Q];
+        pick_proc();
+      return;
+    }
+    qtail = &rdy_tail[SERVER_Q];
   } else {
 
     /* remove from user queue */
-    for(group = 0; group < M_GROUP_NUM; ++group) {
+    for (group = 0; group < M_GROUP_NUM; ++group) {
       xp = group_head[group];
       qtail = &group_tail[group];
-      if ( xp == NIL_PROC) continue;
+      if (xp == NIL_PROC)
+        continue;
       if (xp == rp) {
         group_head[group] = xp->p_nextready;
-        if(group == current_group){
+        if (group == current_group) {
+
+          if (group_head[group]->p_nextready != NIL_PROC)
+              group_head[group]->p_nextready->p_remaining_time = xp->p_remaining_time;
 #if (CHIP == M68000)
-          if (rp == proc_ptr)
+            if (rp == proc_ptr)
 #endif
-          pick_proc();
-        }          
+              pick_proc();
+        }
         return;
       }
     }
-
-	}
+  }
 
   /* Search body of queue.  A process can be made unready even if it is
    * not running by being sent a signal that kills it.
    */
-  while (xp->p_nextready != rp){
-	  xp = xp->p_nextready;
+  while (xp->p_nextready != rp) {
+    xp = xp->p_nextready;
     if (xp == NIL_PROC)
       return;
-    }
+  }
 
-    xp->p_nextready = xp->p_nextready->p_nextready;
-  if (*qtail == rp) *qtail = xp;
+  xp->p_nextready = xp->p_nextready->p_nextready;
+  if (*qtail == rp)
+    *qtail = xp;
 }
 
 /*===========================================================================*
@@ -469,8 +486,12 @@ PRIVATE void sched() {
 
   sched_real_count++;
 
-  if (group_head[current_group] == NIL_PROC)
+  /* No process is running */
+  if (group_head[current_group] == NIL_PROC) {
+    /* Chec if another proccess is ready in different queue and if there is - switch to it */
+    pick_proc();
     return;
+  }
 
   /* if remaining time - consume time and continue */
   if (group_head[current_group]->p_remaining_time > 0) {
@@ -492,8 +513,7 @@ PRIVATE void sched() {
 
   /* make sure every queue starts with its own process */
   for (group = 0; group < M_GROUP_NUM; ++group) {
-    while (!(group_head[group] == NIL_PROC ||
-             group == group_head[group]->p_group)) {
+    while (!(group_head[group] == NIL_PROC || group == group_head[group]->p_group)) {
       new_group = group_head[group]->p_group;
 
       group_head[group]->p_remaining_time = group_time[new_group];
