@@ -469,34 +469,35 @@ PRIVATE void sched() {
 
   sched_real_count++;
 
-  if (group_head[current_group] == NIL_PROC) 
+  if (group_head[current_group] == NIL_PROC)
     return;
 
   /* if remaining time - consume time and continue */
-  if ( group_head[current_group]->p_remaining_time > 0) {
+  if (group_head[current_group]->p_remaining_time > 0) {
     group_head[current_group]->p_remaining_time--;
     return;
   }
 
-    sched_count++;
-    
-    /* Move current process to the end of queue */
-    group_head[current_group]->p_remaining_time = group_time[current_group];
-    group_tail[current_group]->p_nextready = group_head[current_group];
-    group_tail[current_group] = group_head[current_group];
-    group_head[current_group] = group_head[current_group]->p_nextready;
-    group_tail[current_group]->p_nextready = NIL_PROC;
-  
-    /* Next group */
-    current_group = (current_group + 1) % M_GROUP_NUM;
+  sched_count++;
+
+  /* Move current process to the end of queue */
+  group_head[current_group]->p_remaining_time = group_time[current_group];
+  group_tail[current_group]->p_nextready = group_head[current_group];
+  group_tail[current_group] = group_head[current_group];
+  group_head[current_group] = group_head[current_group]->p_nextready;
+  group_tail[current_group]->p_nextready = NIL_PROC;
+
+  /* Next group */
+  current_group = (current_group + 1) % M_GROUP_NUM;
 
   /* make sure every queue starts with its own process */
   for (group = 0; group < M_GROUP_NUM; ++group) {
-    while (!(group_head[group] == NIL_PROC || group == group_head[group]->p_group)) {
+    while (!(group_head[group] == NIL_PROC ||
+             group == group_head[group]->p_group)) {
       new_group = group_head[group]->p_group;
-      
+
       group_head[group]->p_remaining_time = group_time[new_group];
-    
+
       group_tail[new_group]->p_nextready = group_head[group];
       group_tail[new_group] = group_head[group];
       group_head[group] = group_head[group]->p_nextready;
